@@ -58,3 +58,21 @@ html.booting,html.booting body{overflow:hidden}
 @keyframes ah-leave{0%{clip-path:inset(0 0 0 0);opacity:1}15%{clip-path:inset(42% 0 38% 0);transform:translateX(9px)}30%{clip-path:inset(10% 0 72% 0);transform:translateX(-11px)}45%{clip-path:inset(62% 0 6% 0);transform:translateX(7px)}60%{clip-path:inset(0 0 0 0);transform:none;opacity:1}100%{opacity:0;transform:scale(1.04)}}
 @media(max-width:700px){.loader-eyebrow{font-size:9px;letter-spacing:2px;margin-bottom:20px}.loader-jp{font-size:10px;letter-spacing:4px}.loader-status,.loader-track{width:82vw}}
 @media(prefers-reduced-motion:reduce){.loader-logo::before,.loader-logo::after,.loader-eyebrow i{animation:none}#loader.is-leaving{animation:none;opacity:0;transition:opacity .25s ease}}
+
+/* Discrete route controls. Native page scroll is disabled; p is driven by gestures. */
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+#routeNav{position:fixed;z-index:12;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:stretch;background:#0b1723ed;border:1px solid var(--border);border-radius:3px;backdrop-filter:blur(6px);box-shadow:0 8px 40px #020810aa;max-width:94vw}
+#routeNav[hidden]{display:none}
+#routeNav button{font:10px var(--mono);letter-spacing:1px;color:#aebccb;padding:12px 16px;min-height:44px;display:flex;align-items:center;gap:7px;white-space:nowrap}
+#routeNav button:hover:not(:disabled){color:var(--accent);background:#17303d}
+#routeNav button:disabled{color:#3f515e;cursor:default}
+#routeNav button span{color:var(--accent);font-size:15px;line-height:1}
+#routeName{border-left:1px solid var(--border);border-right:1px solid var(--border);color:var(--text);max-width:54vw;overflow:hidden;text-overflow:ellipsis}
+#routeName b{color:#91a8b8;font-weight:400}
+#routeName span{margin-left:6px}
+#routeSkip{position:fixed;z-index:12;right:calc(14px + env(safe-area-inset-right));bottom:calc(84px + env(safe-area-inset-bottom));padding:11px 17px;min-height:42px;font:10px var(--mono);letter-spacing:1px;color:#dbe3c4;background:#0b1723ed;border:1px solid #8ba4a45e;border-radius:3px;backdrop-filter:blur(6px);box-shadow:0 8px 40px #020810aa}
+#routeSkip[hidden]{display:none}
+#routeSkip:hover{border-color:var(--accent);color:var(--accent)}
+.at-entrance #routeNav,.at-entrance #routeSkip{display:none}
+@media(max-width:700px){#routeNav{bottom:calc(16px + env(safe-area-inset-bottom))}#routeNav button{padding:11px 13px;font-size:9px;letter-spacing:.5px}#routeName{max-width:58vw}#routeSkip{bottom:calc(74px + env(safe-area-inset-bottom));font-size:9px}}
+@media(prefers-reduced-motion:reduce){#routeNav,#routeSkip{backdrop-filter:none}}
