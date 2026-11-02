@@ -1,6 +1,8 @@
 // A scroll-directed interlude. Every car pose and tyre mark is derived from progress.
 let boardingScene=false;
 const ease=v=>{v=Math.max(0,Math.min(1,v));return v*v*(3-2*v)};
+// Half eases with unit slope at the join, so a moving leg hands over without a speed step.
+const leadOut=v=>{v=Math.max(0,Math.min(1,v));return v+v*v-v*v*v},leadIn=v=>1-leadOut(1-v);
 function cityProgress(v){if(v<.60)return v;if(v<.655)return .60+(v-.60)/.055*.08;if(v<.90)return .68;if(v<.96)return .745+ease((v-.90)/.06)*.14;return .885+(v-.96)/.04*.115}
 function sideCar(x,y,scale=1,boarding=0,lights=true,occupant=1){bmwSide(x,y,scale,lights,occupant)}
 function fujiSky(v){rect(0,0,1100,680,'#091320');const sky=g.createLinearGradient(0,0,0,450);sky.addColorStop(0,'#07101e');sky.addColorStop(.7,'#17283b');sky.addColorStop(1,'#454151');g.fillStyle=sky;g.fillRect(0,0,1100,460);round(838,119,35,'#c9d2c1');glow(838,119,100,'#c9e2c120');for(let i=0;i<65;i++)rect((i*137)%1100,(i*37)%220,1,1,'#c1c9c46b');const fx=730-v*70;
@@ -9,12 +11,16 @@ function sevenStore(x,y,scale=1){g.save();g.translate(x,y);g.scale(scale,scale);
 function sevenBackground(){if(sevenImage.complete&&sevenImage.naturalWidth){g.drawImage(sevenImage,0,0,1100,680);rect(0,0,1100,680,'#050e1928');}else{fujiSky(.8);sevenStore(570,262,.95);}for(let i=0;i<5;i++)line(560+i*105,513,520+i*105,610,'#8a9d9455');text('NEXT / SERVER ROOM',755,500,12,'#bdd89c');rect(745,481,8,23,'#b8d29b');}
 // Exterior actors are always drawn before the unchanged, alpha-transparent car.
 function farSidePedestrian(x,y,freeze=false){const moving=heroGait.moving;if(freeze)heroGait.moving=false;girl(x,y,true);heroGait.moving=moving;}
-function arrival(v,t){
+// She keeps walking out of frame into the fade instead of treading on the spot.
+const arrivalBeyond=progress=>clamp((progress-.90)/.0175)*150;
+// The car holds its line until the cut, then rolls in nose-first at the speed the brake curve starts from.
+function parkX(a){return a<.5?driveMotion(1).x:400-160*(2-2*a);}
+function arrival(v,t,beyond=0){
 sevenBackground();const a=clamp((v-.7)/.3),stop=clamp(a/.5),carx=400+70*(1-(1-stop)**3),exiting=a>=.70;
-const walkout=ease((a-.84)/.16),old=dir;
-if(exiting&&a<.84)carTransferHero(carx,564,1.1,1-ease(clamp((a-.70)/.105)));
-else if(exiting)farSidePedestrian(lerp(453,640,walkout),531);
-bmwBrake=a>.10&&a<.86?ease((a-.10)/.12):0;sideCar(carx,564,1.1,0,true,exiting?0:1);bmwBrake=0;
+const walkout=leadIn((a-.84)/.16),old=dir;
+if(exiting&&a<.84)carTransferHero(carx,564,1.1,1-clamp((a-.70)/.125));
+else if(exiting)farSidePedestrian(lerp(453,640,walkout)+beyond,531);
+bmwBrake=a>.10?ease((a-.10)/.12)*(1-ease((a-.74)/.1)):0;sideCar(carx,564,1.1,0,true,exiting?0:1);bmwBrake=0;
 dir=old;
 }
 // Yaw around the vertical axis. Height never rotates into the road plane.
@@ -55,22 +61,22 @@ for(const side of [-1,1]){for(let i=1;i<32;i++){const old=v-i*.0035,prev=old+.00
 // Environment changes at one fully occluded instant, never through double exposure.
 function transitionShade(a){const shade=ease((a-.25)/.25)*(1-ease((a-.5)/.25));if(shade>0)rect(0,0,1100,680,`rgba(4,9,17,${shade})`);}
 function sceneCut(drawA,drawB,a){if(a<.5)drawA();else drawB();transitionShade(a);}
-function boardingPoint(progress){const q=normalizedBMW(0,90,33),seat=660+(q.left+q.w*q.seat)*1.05,amount=clamp((progress-.655)/(BOARD_START-.655)),x=lerp(440,seat,ease(amount));return {x,y:lerp(477,493,ease(amount)),seat,remaining:seat-x};}
+function boardingPoint(progress){const q=normalizedBMW(0,90,33),seat=660+(q.left+q.w*q.seat)*1.05,amount=clamp((progress-.655)/(BOARD_START-.655)),x=lerp(440,seat,leadOut(amount));return {x,y:lerp(477,493,ease(amount)),seat,remaining:seat-x};}
 function boardingFrame(a,t){const actual=p;p=.68;boardingScene=true;drawCity(t);boardingScene=false;p=actual;
 const progress=.655+a*.245*.22,point=boardingPoint(progress),seated=progress>=BOARD_END;
 if(progress<BOARD_START)farSidePedestrian(point.x,point.y,point.remaining<.3);
-else if(!seated)carTransferHero(660,526,1.05,ease((progress-BOARD_START)/(BOARD_END-BOARD_START)));
-sideCar(660,526,1.05,0,progress>=BOARD_START,seated?1:0);
+else if(!seated)carTransferHero(660,526,1.05,(progress-BOARD_START)/(BOARD_END-BOARD_START));
+sideCar(660,526,1.05,0,ease((progress-BOARD_END)/(.7089-BOARD_END)),seated?1:0);
 }
 function drawJourneyScene(t){const actual=p;if(actual>=.94){drawRooftop(t);return;}
-if(actual<.655){p=cityProgress(actual);drawCity(t);p=actual;if(actual>.625){g.save();g.globalAlpha=1;const cam=clamp((cityProgress(actual)-.15)/.85)*3900+actor.camera;sideCar(660+(2432-cam),526,1.05,0,false,0);g.restore();}return;}
-if(actual>=.90){if(actual<.935){sceneCut(()=>arrival(1,t),()=>{p=cityProgress(actual);drawCity(t);p=actual},(actual-.90)/.035);}else{p=cityProgress(actual);drawCity(t);p=actual;}return;}
+if(actual<.655){p=cityProgress(actual);drawCity(t);p=actual;if(actual>.55){g.save();g.globalAlpha=1;const cam=clamp((cityProgress(actual)-.15)/.85)*3900+actor.camera;sideCar(660+(2432-cam),526,1.05,0,false,0);g.restore();}return;}
+if(actual>=.90){if(actual<.935){sceneCut(()=>arrival(1,t,arrivalBeyond(actual)),()=>{p=cityProgress(actual);drawCity(t);p=actual},(actual-.90)/.035);}else{p=cityProgress(actual);drawCity(t);p=actual;}return;}
 const v=(actual-.655)/.245;
 if(v<.22){boardingFrame(v/.22,t);}
 else if(v<.39){const a=(v-.22)/.17,b=ease(a);hideDriver=true;hideCar=true;sceneCut(()=>boardingFrame(1,t),()=>perspectiveRoad(0,t,false),a);hideDriver=false;hideCar=false;bmwTransition(660,lerp(526,568,b),1.05,b);transitionShade(a);}
 else if(v<.78){perspectiveRoad(ease((v-.39)/.39),t);}
 else if(v<.91){const a=(v-.78)/.13,b=ease(a);hideDriver=true;hideCar=true;sceneCut(()=>perspectiveRoad(1,t,false),()=>sevenBackground(),a);hideDriver=false;hideCar=false;
-const end=driveMotion(1),cx=lerp(end.x,400,b),ground=lerp(568+70*1.05,564+33*1.1,b),size=lerp(1.05,1.1,b),turn=1-b;
+const cx=parkX(a),ground=lerp(568+70*1.05,564+33*1.1,b),size=lerp(1.05,1.1,b),turn=1-b;
 bmwTransition(cx,ground-(33+37*turn)*size,size,turn);transitionShade(a);}
 
 else{arrival(.7+(v-.91)/.09*.3,t);}
@@ -112,6 +118,8 @@ function drawJourney(t){
  if(actual>=.945)return;
  const hx=actual<.94?440-actor.camera:a.x,foot=actual<.94?525:a.foot;
  g.save();g.translate(hx,foot+2);g.scale(1,.15);glow(0,0,24,'#010710a0');g.restore();girl(hx,foot-48,true);
+ // Second half of the 7-Eleven fade: this branch takes over exactly at full black.
+ if(actual<.935)transitionShade((actual-.90)/.035);
 }
 
 function drawAccessFacade(origin,doorOpen,reveal){
