@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16293a"/>
+      <stop offset="1" stop-color="#0a131d"/>
+    </linearGradient>
+    <filter id="g" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="0.9"/>
+    </filter>
+  </defs>
+  <!-- dark rounded tile -->
+  <!-- monitor bezel + stand -->
+  <rect x="27" y="47" width="10" height="4" fill="#2a2636"/>
+  <rect x="20" y="51" width="24" height="3" rx="1.5" fill="#201c2b"/>
+  <rect x="9" y="11" width="46" height="35" rx="4"
+        fill="#1d1a27" stroke="#3b3350" stroke-width="2"/>
+  <!-- CRT screen: the night city -->
+  <rect x="14" y="16" width="36" height="25" rx="2" fill="url(#sky)"/>
+  <circle cx="44" cy="22" r="2.6" fill="#dde6d4"/>
+  <g fill="#0e1b26">
+    <rect x="14" y="31" width="6" height="10"/>
+    <rect x="21" y="27" width="5" height="14"/>
+    <rect x="27" y="33" width="5" height="8"/>
+    <rect x="33" y="25" width="6" height="16"/>
+    <rect x="40" y="30" width="4" height="11"/>
+    <rect x="45" y="28" width="5" height="13"/>
+  </g>
+  <!-- neon windows — pink accent -->
+  <g filter="url(#g)">
+    <rect x="34.5" y="28" width="1.4" height="1.4" fill="#C982A3"/>
+    <rect x="36.8" y="31" width="1.4" height="1.4" fill="#C982A3"/>
+    <rect x="22.6" y="30" width="1.4" height="1.4" fill="#e9a3c3"/>
+    <rect x="46.6" y="32" width="1.4" height="1.4" fill="#7cc7c2"/>
+    <rect x="15.4" y="34" width="1.4" height="1.4" fill="#e9a3c3"/>
+  </g>
+  <!-- pink horizon glow -->
+  <rect x="14" y="39" width="36" height="2" fill="#C982A3" opacity="0.32"/>
+  <!-- scanline -->
+  <rect x="14" y="23" width="36" height="1" fill="#000" opacity="0.25"/>
+</svg>

@@ -30,3 +30,31 @@ dialog{scrollbar-color:#68546a var(--panel)}dialog::backdrop{background:#090d16d
 
 /* Contact utility links share one line box, including the native button. */
 .contact-secondary{display:flex;align-items:center;flex-wrap:nowrap;gap:20px}.contact-secondary a,.contact-secondary button{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;height:36px;min-height:36px;margin:0;padding:0;border:0;background:none;line-height:1;white-space:nowrap;vertical-align:middle}.contact-secondary button{appearance:none}@media(max-width:700px){.contact-secondary{gap:16px}.contact-secondary a,.contact-secondary button{height:36px;min-height:36px}}
+
+/* ============ BOOT LOADER ============ */
+/* Glitch "AH" title card over a live pixel skyline, held
+   until the monitor artwork has decoded, then torn away. */
+html.booting,html.booting body{overflow:hidden}
+#loader{position:fixed;inset:0;z-index:9999;background:#080c13;display:grid;place-items:center;overflow:hidden;touch-action:none}
+#loaderCity{position:absolute;inset:0;width:100%;height:100%}
+.loader-scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 2px,#00000055 2px 3px);opacity:.45}
+#loader::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 32%,#05090b 100%)}
+.loader-core{position:relative;z-index:2;text-align:center;padding:0 24px;transform:translateY(-2%)}
+.loader-eyebrow{font:10px 'IBM Plex Mono',monospace;letter-spacing:3px;color:#C982A3;margin-bottom:28px;display:flex;gap:10px;align-items:center;justify-content:center}
+.loader-eyebrow i{width:5px;height:5px;background:#C982A3;box-shadow:0 0 10px #C982A3;animation:ah-blink 1s steps(1) infinite}
+.loader-logo{position:relative;display:inline-block;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:clamp(88px,20vw,188px);letter-spacing:.06em;line-height:.9;color:#f4f7e9;text-shadow:0 0 36px #C982A333}
+.loader-logo::before,.loader-logo::after{content:attr(data-text);position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen}
+.loader-logo::before{color:#00dfff;clip-path:inset(0 0 55% 0);animation:ah-glx 2.4s infinite linear alternate}
+.loader-logo::after{color:#C982A3;clip-path:inset(58% 0 0 0);animation:ah-gly 2.9s infinite linear alternate}
+.loader-jp{font:12px 'IBM Plex Mono',monospace;letter-spacing:6px;color:#6d7777;margin-top:20px}
+.loader-status{display:flex;justify-content:space-between;width:min(420px,76vw);margin:44px auto 0;font:10px 'IBM Plex Mono',monospace;letter-spacing:2px;color:#9bb0b5}
+#loaderPct{color:#C982A3}
+.loader-track{width:min(420px,76vw);height:2px;margin:12px auto 0;background:#1d2b31;overflow:hidden}
+#loaderBar{display:block;height:100%;width:0;background:linear-gradient(90deg,#C982A3,#e9a3c3);box-shadow:0 0 12px #C982A388;transition:width .2s ease}
+@keyframes ah-blink{0%,62%{opacity:1}63%,100%{opacity:.14}}
+@keyframes ah-glx{0%{transform:translate(0,0)}20%{transform:translate(-3px,1px)}40%{transform:translate(2px,-1px)}60%{transform:translate(-2px,0)}80%{transform:translate(3px,1px)}100%{transform:translate(0,0)}}
+@keyframes ah-gly{0%{transform:translate(0,0)}25%{transform:translate(2px,0)}50%{transform:translate(-3px,-1px)}75%{transform:translate(1px,1px)}100%{transform:translate(0,0)}}
+#loader.is-leaving{animation:ah-leave .5s steps(2,end) forwards}
+@keyframes ah-leave{0%{clip-path:inset(0 0 0 0);opacity:1}15%{clip-path:inset(42% 0 38% 0);transform:translateX(9px)}30%{clip-path:inset(10% 0 72% 0);transform:translateX(-11px)}45%{clip-path:inset(62% 0 6% 0);transform:translateX(7px)}60%{clip-path:inset(0 0 0 0);transform:none;opacity:1}100%{opacity:0;transform:scale(1.04)}}
+@media(max-width:700px){.loader-eyebrow{font-size:9px;letter-spacing:2px;margin-bottom:20px}.loader-jp{font-size:10px;letter-spacing:4px}.loader-status,.loader-track{width:82vw}}
+@media(prefers-reduced-motion:reduce){.loader-logo::before,.loader-logo::after,.loader-eyebrow i{animation:none}#loader.is-leaving{animation:none;opacity:0;transition:opacity .25s ease}}

@@ -15,6 +15,8 @@ const lead=city&&!reduced?dir*(actor.motion*26+actor.proximity*16):0;actor.camer
 
 let active=-1,torchOn=true,aimY=405;const chapters=portfolio;
 const tokyoImage=new Image();tokyoImage.src="assets/tokyo-panorama.webp";const sevenImage=new Image();sevenImage.src="assets/seven-stop.webp";
+// Entrance desk plate: real photo of the room; the live city renders inside its CRT glass.
+const deskImage=new Image();deskImage.src="assets/hero-desk.jpg";
 const thumbs=portfolio.slice(0,5).map(()=>new Image());
 function poly(points,c){g.fillStyle=c;g.beginPath();points.forEach((v,i)=>i?g.lineTo(...v):g.moveTo(...v));g.closePath();g.fill()}
 function round(x,y,r,c){g.fillStyle=c;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill()}
@@ -61,8 +63,33 @@ caseReturnFocus=document.activeElement;signalState.velocity=0;setScrollPosition(
 }
 $('#progress').innerHTML='<button data-p="0" class="active"><span>00</span> Entrance</button>'+routeOrder.map((id,i)=>{const c=portfolio[id];return `<button data-p="${c.pos}"><span>0${i+1}</span> ${id===5?'Get in touch':c.name}</button>`}).join('');$('.maplinks').innerHTML='<button data-p="0"><span>00</span><b>Entrance</b><span>Room →</span></button>'+routeOrder.map((id,i)=>{const c=portfolio[id];return `<button data-p="${c.pos}"><span>0${i+1}</span><b>${id===5?'Get in touch':c.name}</b><span>${c.place} →</span></button>`}).join('');$('#torch').onclick=()=>{torchOn=!torchOn;$('#torch').setAttribute('aria-pressed',String(torchOn));$('#torch').innerHTML=(torchOn?'Flashlight on':'Flashlight off')+' <span>◉</span>';};addEventListener('pointermove',e=>{aimY=350+e.clientY/h*140});
 
-function frame(ms){const t=ms/1000,dt=Math.min(64,ms-(clock||ms));clock=ms;advanceJourney(ms,dt);if(Math.abs(p-last)>.00001){dir=p>last?1:-1;walk+=Math.abs(p-last)*230;}updateMolis(p,ms);warmNearbyCases();updateActor(dt,p-last,t);updateHeroGait(p,dt);updateRoofAction(ms,dt);last=p;if(screenLook&&Math.abs(p-screenLook.progress)>.006){screenLook=null;}if(screenLook&&!screenLook.opened&&ms-screenLook.started>650){screenLook.opened=true;openCase(screenLook.index);}drawJourney(reduced?0:t);ctx.clearRect(0,0,w,h);ctx.fillStyle='#090D16';ctx.fillRect(0,0,w,h);const z=clamp(p/.18),e=z*z*(3-2*z);let mx=w<700?w*.09:w*.52,my=w<700?(h<740?360:Math.max(450,h*.56)):h*.48-w*.41*680/2200,mw=w<700?Math.min(w*.82,(h-(h<740?360:Math.max(450,h*.56))-115)*1100/680):w*.41,mh=mw*680/1100;let x=lerp(mx,0,e),y=lerp(my,0,e),sw=lerp(mw,w,e),sh=lerp(mh,h,e);ctx.save();if(e<.99){ctx.shadowBlur=45;ctx.shadowColor='#C982A330';ctx.fillStyle='#38313f';ctx.fillRect(x-20*(1-e),y-20*(1-e),sw+40*(1-e),sh+57*(1-e));ctx.shadowBlur=0;ctx.fillStyle='#1f1b2b';ctx.fillRect(x-13*(1-e),y-12*(1-e),sw+26*(1-e),sh+28*(1-e));ctx.fillStyle='#3d3445';ctx.fillRect(x+sw*.41,y+sh+37*(1-e),sw*.18,38*(1-e));ctx.fillStyle='#24212f';ctx.fillRect(x+sw*.24,y+sh+70*(1-e),sw*.52,9*(1-e));ctx.fillStyle='#E9A3C3';ctx.fillRect(x+sw-18,y+sh+21*(1-e),4,3);ctx.font='8px monospace';ctx.fillStyle='#AAA3B5';ctx.fillText('AFTER HOURS / PERSONAL TERMINAL',x+10,y+sh+25*(1-e));}
-ctx.imageSmoothingEnabled=false;// Preserve the artwork proportions, with a portrait camera following the action.
+// Measured CRT glass quad (TL,TR,BR,BL) in plate pixels, plus the plate size.
+// The full city is drawn into this quad as vertical strips so it follows the
+// tube's slight trapezoid. On scroll the desk AND the city are zoomed by one
+// shared transform about the glass centre (drifting to the viewport centre), so
+// the city stays locked to the glass — no black tube edges peek through — and the
+// trapezoid resolves to a full rectangle once the glass overfills the viewport.
+const PLATE_W=1672,PLATE_H=941,GLASS=[[819,254],[1333,214],[1328,627],[814,617]];
+// Rounded CRT-glass outline (radius in plate px) so the live city gets soft tube corners.
+function glassPath(pts,r){ctx.beginPath();const a=pts[3],b=pts[0];ctx.moveTo((a[0]+b[0])/2,(a[1]+b[1])/2);for(let i=0;i<4;i++){const c=pts[i],n=pts[(i+1)%4];ctx.arcTo(c[0],c[1],(c[0]+n[0])/2,(c[1]+n[1])/2,r);}ctx.closePath();}
+function entranceCRT(e){
+const mob=w<700,cv=Math.max(w/PLATE_W,h/PLATE_H),iw=PLATE_W*cv,ih=PLATE_H*cv;
+let ox=w*.5-1088*cv,oy=(mob?h*.62:h*.46)-437*cv;ox=Math.min(0,Math.max(w-iw,ox));oy=Math.min(0,Math.max(h-ih,oy));
+const S=GLASS.map(c=>[ox+c[0]*cv,oy+c[1]*cv]);
+const gcx=(S[0][0]+S[1][0]+S[2][0]+S[3][0])/4,gcy=(S[0][1]+S[1][1]+S[2][1]+S[3][1])/4;
+const gw=Math.max(S[1][0],S[2][0])-Math.min(S[0][0],S[3][0]),gh=S[3][1]-S[0][1],zb=Math.max(w/gw,h/gh)*1.04,ee=e*e,dz=lerp(1,zb,ee),cx=lerp(gcx,w/2,ee),cy=lerp(gcy,h/2,ee);
+ctx.save();ctx.translate(cx,cy);ctx.scale(dz,dz);ctx.translate(-gcx,-gcy);
+if(deskImage.complete&&deskImage.naturalWidth){ctx.save();ctx.globalAlpha=clamp(1-(e-.78)/.2);ctx.drawImage(deskImage,ox,oy,iw,ih);ctx.restore();}
+ctx.imageSmoothingEnabled=false;const N=mob?36:56;
+ctx.save();glassPath(S,4);ctx.clip();
+for(let i=0;i<N;i++){const u0=i/N,u1=(i+1)/N,tx0=lerp(S[0][0],S[1][0],u0),ty0=lerp(S[0][1],S[1][1],u0),bx0=lerp(S[3][0],S[2][0],u0),by0=lerp(S[3][1],S[2][1],u0),tx1=lerp(S[0][0],S[1][0],u1),h=by0-ty0,sk=(bx0-tx0)/h;ctx.save();ctx.transform(1,0,sk,1,tx0-sk*ty0,0);ctx.drawImage(scene,u0*1100,0,1100/N,680,0,ty0,tx1-tx0+1,h);ctx.restore();}
+ctx.restore();
+if(e<.6){ctx.save();glassPath(S,4);ctx.clip();const y0=Math.min(S[0][1],S[1][1]),y1=Math.max(S[2][1],S[3][1]),x0=Math.min(S[0][0],S[3][0]),x1=Math.max(S[1][0],S[2][0]);ctx.fillStyle='#090D162b';for(let s=y0;s<y1;s+=3)ctx.fillRect(x0,s,x1-x0,1);ctx.restore();}
+ctx.restore();
+const P=S.map(c=>[cx+dz*(c[0]-gcx),cy+dz*(c[1]-gcy)]);
+return {x:Math.min(P[0][0],P[3][0]),y:Math.min(P[0][1],P[1][1]),sw:Math.max(P[1][0],P[2][0])-Math.min(P[0][0],P[3][0]),sh:Math.max(P[2][1],P[3][1])-Math.min(P[0][1],P[1][1])};
+}
+function frame(ms){const t=ms/1000,dt=Math.min(64,ms-(clock||ms));clock=ms;advanceJourney(ms,dt);if(Math.abs(p-last)>.00001){dir=p>last?1:-1;walk+=Math.abs(p-last)*230;}updateMolis(p,ms);warmNearbyCases();updateActor(dt,p-last,t);updateHeroGait(p,dt);updateRoofAction(ms,dt);last=p;if(screenLook&&Math.abs(p-screenLook.progress)>.006){screenLook=null;}if(screenLook&&!screenLook.opened&&ms-screenLook.started>650){screenLook.opened=true;openCase(screenLook.index);}drawJourney(reduced?0:t);ctx.clearRect(0,0,w,h);ctx.fillStyle='#090D16';ctx.fillRect(0,0,w,h);const z=clamp(p/.18),e=z*z*(3-2*z);// Entrance frames the live city inside the CRT; scrolling dives the camera into the screen.
 const mobile=w<700,scale=Math.max(w/1100,h/(mobile?780:680)),viewW=w/scale,viewH=h/scale;
 let focus=mobile?490:550;
 if(mobile&&p>.625){
@@ -73,7 +100,9 @@ else if(p<.90){const a=clamp((p-.87795)/.02205),stop=clamp(a/.5);focus=400+70*(1
 else focus=p>=.945?roofPath(p).x:lerp(600,490,ease((p-.90)/.035));
 }
 const sourceW=lerp(1100,viewW,e),sourceH=lerp(680,viewH,e),sourceX=clamp(focus-sourceW/2,0,1100-sourceW),sourceY=(680-sourceH)/2;
-ctx.drawImage(scene,sourceX,sourceY,sourceW,sourceH,x,y,sw,sh);sceneView={sourceX,sourceY,sourceW,sourceH,x,y,sw,sh};if(e<.95){const grad=ctx.createLinearGradient(x,y,x+sw,y+sh);grad.addColorStop(0,'#becbd312');grad.addColorStop(.5,'transparent');grad.addColorStop(1,'#76b3bc08');ctx.fillStyle=grad;ctx.fillRect(x,y,sw,sh);ctx.fillStyle='#01080b';ctx.globalAlpha=(1-e)*.02;ctx.fillRect(x,y,sw,sh);ctx.globalAlpha=1;ctx.fillStyle='#090D162b';for(let scan=y;scan<y+sh;scan+=3)ctx.fillRect(x,scan,sw,1);ctx.strokeStyle='#c982a345';ctx.lineWidth=2;ctx.strokeRect(x-3,y-3,sw+6,sh+6);}ctx.restore();updateUI();updateDriveUI();updateFinale(ms);updateUnifiedUI();requestAnimationFrame(frame)}requestAnimationFrame(frame);
+if(e>=1){ctx.imageSmoothingEnabled=false;ctx.drawImage(scene,sourceX,sourceY,sourceW,sourceH,0,0,w,h);sceneView={sourceX,sourceY,sourceW,sourceH,x:0,y:0,sw:w,sh:h};}
+else{const vb=entranceCRT(e,sourceX,sourceY,sourceW,sourceH);sceneView={sourceX,sourceY,sourceW,sourceH,x:vb.x,y:vb.y,sw:vb.sw,sh:vb.sh};const t=clamp((e-.8)/.2),blend=t*t*(3-2*t);if(blend>0){ctx.save();ctx.globalAlpha=blend;ctx.imageSmoothingEnabled=false;ctx.drawImage(scene,sourceX,sourceY,sourceW,sourceH,0,0,w,h);ctx.restore();}}
+updateUI();updateDriveUI();updateFinale(ms);updateUnifiedUI();requestAnimationFrame(frame)}requestAnimationFrame(frame);
 function go(v){preloadCaseAt(v);requestJump(v);$('#map').close()}document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>go(+b.dataset.p));$('#enter').onclick=()=>go(.25);$('#menuBtn').onclick=()=>$('#map').showModal();document.querySelectorAll('.close').forEach(b=>b.onclick=()=>b.closest('dialog').close());document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()}}));$('#caseBtn').onclick=()=>openCase(active);
 let audioCtx,master,on=false;$('#sound').onclick=()=>{if(!audioCtx){audioCtx=new AudioContext();master=audioCtx.createGain();master.gain.value=0;master.connect(audioCtx.destination);[55,82.41,110,164.81].forEach((f,i)=>{const o=audioCtx.createOscillator(),v=audioCtx.createGain();o.type='sine';o.frequency.value=f;v.gain.value=.025/(i+1);o.connect(v);v.connect(master);o.start()});const buffer=audioCtx.createBuffer(1,audioCtx.sampleRate*3,audioCtx.sampleRate),a=buffer.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=(Math.random()*2-1)*.02;const noise=audioCtx.createBufferSource();noise.buffer=buffer;noise.loop=true;const filter=audioCtx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=700;noise.connect(filter);filter.connect(master);noise.start();}audioCtx.resume();on=!on;master.gain.setTargetAtTime(on?1:0,audioCtx.currentTime,.3);$('#sound').innerHTML=on?'Sound on <span>◖</span>':'Sound off <span>◖</span>'};
 
