@@ -9,6 +9,7 @@
 /* Extra physical distance keeps the city pace while extending the highway. */
 #scrollspace{height:1353.5vh}
 @media(max-width:700px){
+#scrollspace{height:750vh}
 header{padding:20px 6%;padding-top:max(20px,env(safe-area-inset-top))}.brand{font-size:23px}.brand span{font-size:8px;margin-left:12px}
 #intro{top:14%;width:86%}h1{font-size:clamp(58px,17vw,84px);margin:24px 0}.intro-caption{margin-top:18px}.jp{margin-left:14px}
 #chapter,#driveHud{top:12%;left:7%;max-width:86%;filter:drop-shadow(0 3px 14px #050b13)}
