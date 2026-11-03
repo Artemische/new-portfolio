@@ -1,6 +1,6 @@
 // Roof position, foot support, contemplation and one-shot flight have separate clocks.
 const roofState={seen:false,departed:false,start:null,arrival:0,facingCity:false,departing:false,direction:1,lastPosition:0,settleStart:0,turnUntil:0,turnTarget:0,rainStart:0,rainStrength:0};
-function roofPath(progress){const climb=clamp((progress-.945)/.021),landing=clamp((progress-.966)/.002),walk=clamp((progress-.968)/.012);return {climb,landing,walk,x:450-80*(1-clamp((progress-.94)/.005))+220*climb+135*ease(walk),y:735-180*climb-35*ease(walk),distance:-80*(1-clamp((progress-.94)/.005))+Math.hypot(220,180)*climb+Math.hypot(135,35)*ease(walk),offset:-180*(1-climb)};}
+function roofPath(progress){const climb=clamp((progress-.945)/.021),landing=clamp((progress-.966)/.002),walk=clamp((progress-.968)/.012);return {climb,landing,walk,x:450-80*(1-clamp((progress-.94)/.005))+220*climb+135*walk,y:735-180*climb-35*walk,distance:-80*(1-clamp((progress-.94)/.005))+Math.hypot(220,180)*climb+Math.hypot(135,35)*walk,offset:-180*(1-climb)};}
 function updateRoofAction(ms,dt){if(p<.945)return;const point=roofPath(p),delta=point.distance-roofState.lastPosition;roofState.lastPosition=point.distance;
 if(Math.abs(delta)>.12){roofState.direction=delta<0?-1:1;if(delta>0)roofState.departing=false;roofState.settleStart=0;if(delta<0)roofState.facingCity=false;}
 if(!roofState.departing&&p>=.9798&&!heroGait.moving&&!roofState.turnUntil){if(!roofState.settleStart)roofState.settleStart=ms;if(ms-roofState.settleStart>200)roofState.facingCity=true;}
@@ -10,11 +10,12 @@ const rainTarget=roofState.facingCity?clamp((ms-roofState.rainStart)/1000):0;roo
 if(!reduced&&roofState.seen&&ms-roofState.start>4800)roofState.departed=true;}
 // Each supporting boot is fixed to a tread. The other lifts to the next tread.
 function stairFoot(step){return {x:450+22*step,y:735-18*step};}
-function stairFeet(climb){const q=clamp(climb)*10,n=Math.min(9,Math.floor(q)),u=q-n,a=stairFoot(n),b=stairFoot(n+1),previous=stairFoot(Math.max(0,n-1));const moving={x:lerp(previous.x,b.x,ease(u)),y:lerp(previous.y,b.y,ease(u))-Math.sin(u*Math.PI)*14};return n%2?[moving,a]:[a,moving];}
+// Feet lead the hips by half a tread mid-flight, so neither leg over-reaches; both meet at the ends.
+function stairFeet(climb){const c=clamp(climb)*10,q=c+.5*ease(c/2)*(1-ease((c-8)/2)),n=Math.min(9,Math.floor(q)),u=q-n,a=stairFoot(n),b=stairFoot(n+1),previous=stairFoot(Math.max(0,n-1));const moving={x:lerp(previous.x,b.x,ease(u)),y:lerp(previous.y,b.y,ease(u))-Math.sin(u*Math.PI)*14};return n%2?[moving,a]:[a,moving];}
 function stairHero(point){if(heroFrames.length!==8)return;
 if(p<.945){girl(point.x,point.y-48,true);return;}
-const feet=point.climb>=1?[{x:670,y:555},{x:lerp(648,670,ease(point.landing)),y:lerp(573,555,ease(point.landing))-Math.sin(point.landing*Math.PI)*8}]:stairFeet(point.climb),hx=point.x-5,hipY=point.y-64,art=heroFrames[6];
-for(let i=0;i<2;i++){const foot=feet[i],hipX=hx+(i?5:-4),dx=foot.x-hipX,dy=foot.y-12-hipY,len=Math.hypot(dx,dy),bend=Math.sqrt(Math.max(0,29*29-len*len/4)),kx=(hipX+foot.x)/2+dy/Math.max(1,len)*bend*roofState.direction,ky=(hipY+foot.y-12)/2-dx/Math.max(1,len)*bend*roofState.direction;
+const feet=point.climb>=1?[{x:670,y:555},{x:lerp(648,670,ease(point.landing)),y:lerp(573,555,ease(point.landing))-Math.sin(point.landing*Math.PI)*8}]:stairFeet(point.climb),blend=clamp(point.climb*10)*(1-point.landing),hx=point.x-5*blend,hipY=point.y-62-2*blend-Math.abs(Math.sin(point.climb*10*Math.PI))*2,art=heroFrames[6];
+for(let i=0;i<2;i++){const foot=feet[i],hipX=hx+(i?5:-4),dx=foot.x-hipX,dy=foot.y-12-hipY,len=Math.hypot(dx,dy),bend=Math.sqrt(Math.max(0,31*31-len*len/4)),kx=(hipX+foot.x)/2+dy/Math.max(1,len)*bend*roofState.direction,ky=(hipY+foot.y-12)/2-dx/Math.max(1,len)*bend*roofState.direction;
 heroLimb(g,art,[i?57:39,92,22,24],{x:hipX,y:hipY},{x:kx,y:ky},16);
 heroLimb(g,art,[i?61:37,113,23,23],{x:kx,y:ky},{x:foot.x,y:foot.y-12},17);
 g.save();g.translate(Math.round(foot.x),Math.round(foot.y));g.scale(roofState.direction,1);g.drawImage(art,i?63:32,132,39,23,-13,-20,30,23);g.restore();line(foot.x-10,foot.y+3,foot.x+17,foot.y+3,'#01080bab',2);}

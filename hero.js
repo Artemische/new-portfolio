@@ -9,13 +9,17 @@ function heroPath(progress){
 if(molisState.actorX!==null&&progress<.60)return {section:"street",position:molisState.actorX-440};
 if(progress>=.94&&progress<.945)return {section:'roof-approach',position:roofApproach(progress).distance};
 if(progress>=.945)return {section:'roof',position:roofPath(progress).distance};
+if(progress>=.90&&progress<.9175)return {section:'arrival',position:187+arrivalBeyond(progress)};
 if(progress<.655||progress>=.90)return {section:'street',position:Math.max(0,Math.min(1,(cityProgress(progress)-.15)/.85))*3900};
 const v=(progress-.655)/.245;
 if(v<.22){const a=v/.22;return {section:'boarding',position:boardingPoint(progress).x-440}}
-if(v>=.91){const arrival=.7+(v-.91)/.09*.3;return {section:'arrival',position:187*ease(((arrival-.7)/.3-.84)/.16)}}
+if(v>=.91){const arrival=.7+(v-.91)/.09*.3;return {section:'arrival',position:187*leadIn(((arrival-.7)/.3-.84)/.16)}}
 return {section:'car',position:0};}
 function updateHeroGait(progress,dt){const current=heroPath(progress);const distance=current.section===heroGait.section?Math.abs(current.position-heroGait.position):0;
 heroGait.position=current.position;heroGait.section=current.section;
+// Steer the stride so a scripted walk ends on a feet-under-hips frame, never mid-lunge.
+const finish={'roof-approach':roofApproach(1).distance,roof:roofPath(.98).distance,boarding:boardingPoint(progress).seat-440}[current.section];
+if(finish!==undefined){const left=finish-current.position,want=Math.round((heroGait.distance+left-62.5)/75)*75+62.5-left;heroGait.distance+=(want-heroGait.distance)*.1;}
 if(distance>.015&&current.section!=='car'){heroGait.distance+=distance;heroGait.rest=0;}else heroGait.rest+=dt;
 heroGait.moving=current.section!=='car'&&heroGait.rest<130;}
 function girl(x,y,lit,drawContext=g){const g=drawContext;if(heroFrames.length!==8)return;
@@ -26,7 +30,7 @@ const frames=lit?heroFrames:heroDarkFrames,idle=frames[6];
 // Contact → passing → feet under hips, then the opposite leg. No repeated contact poses.
 const cycle=[0,1,6,5,4,6],phase=Math.floor(heroGait.distance/25)%cycle.length;
 g.save();g.translate(Math.round(x),Math.round(y));g.scale(looking?1:dir,1);g.imageSmoothingEnabled=false;
-if(looking){g.drawImage(frames[7],-52,roofResting?-100:-106);}
+if(looking){g.drawImage(frames[7],-52,-106);}
 else if(moving){
 // Hip stays joined to the legs; weight shift tapers from shoulders to waist.
 const legs=frames[cycle[phase]];

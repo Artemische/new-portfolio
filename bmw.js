@@ -30,7 +30,7 @@ const opacity=g.globalAlpha;g.imageSmoothingEnabled=false;
 for(const q of poses){if(!q.weight)continue;g.save();g.globalAlpha=opacity*q.weight;
 g.fillStyle='#030915aa';g.beginPath();g.ellipse(0,q.bottom-2,q.w*.47,6,0,0,Math.PI*2);g.fill();
 g.save();g.globalAlpha*=.055;g.translate(0,q.bottom*2+2);g.scale(1,-.24);g.translate(0,q.bottom*(1/.24-1));g.drawImage(bmwImages[q.index],q.left,q.top,q.w,q.height);g.restore();
-if(lights&&q.index===0)roadLight(q.left+q.w*.97,q.bottom-5,1,0,140,26);
+if(lights&&q.index===0){const base=g.globalAlpha;g.globalAlpha=base*lights;roadLight(q.left+q.w*.97,q.bottom-5,1,0,140,26);g.globalAlpha=base;}
 g.drawImage(bmwImages[q.index],q.left,q.top,q.w,q.height);g.restore();}
 const seat=bmwDriverData(poses);
 if(occupant&&!hideDriver){g.save();g.globalAlpha=opacity*occupant;g.beginPath();g.rect(-180,-200,360,seat.belt+200);g.clip();
@@ -48,9 +48,9 @@ if(bmwBrake>0){for(const q of poses){const lamps=q.index===0?[.025]:[.15,.72];fo
 function bmwSide(x,y,scale,lights,occupant){
 g.save();g.translate(x,y);g.scale(scale,scale);const pose={...normalizedBMW(0,90,33),weight:1};
 // Side-view driver is behind the actual car pixels, with no rectangular character mask.
-if(occupant&&!hideCar&&!hideDriver){const seat=bmwDriverData([pose]),height=41,wx=seat.x+height*.47,wy=seat.y+height*.54;
+if(!hideCar){const seat=bmwDriverData([pose]),height=41,wx=seat.x+height*.47,wy=seat.y+height*.54;
 g.strokeStyle='#141b27';g.lineWidth=3;g.beginPath();g.ellipse(wx,wy,3,5,-.35,0,Math.PI*2);g.stroke();g.strokeStyle='#8790a0';g.lineWidth=1;g.stroke();
-seatedHero(seat.x,seat.y,height,'side');}
+if(occupant)seatedHero(seat.x,seat.y,height,'side');}
 paintBMW([pose],0,'side',lights);g.restore();
 }
 function bmwRear(x,y,scale,steer){g.save();g.translate(x,y);g.scale(steer>0?-scale:scale,scale);const poses=bmwAngles(steer).map(q=>({...q,seat:steer>0?1-q.seat:q.seat}));paintBMW(poses,1,Math.abs(steer)>.25?'quarter':'rear');
@@ -62,6 +62,6 @@ g.restore();}
 function bmwTransition(x,y,scale,turn){
 const angle=90*(1-turn),index=angle>80?0:angle>62?6:angle>45?7:angle>28?4:angle>17?3:angle>6?2:1;
 const pose=normalizedBMW(index,angle,33+37*turn);
-g.save();g.translate(x,y);g.scale(scale,scale);paintBMW([{...pose,weight:1}],1,index===0?'side':index===1?'rear':'quarter',index===0);g.restore();
+g.save();g.translate(x,y);g.scale(scale,scale);paintBMW([{...pose,weight:1}],1,index===0?'side':index===1?'rear':'quarter',index===0?(angle-80)/10:0);g.restore();
 }
 function bmwTyre(steer,side){const poses=bmwAngles(steer),mirror=steer>0?-1:1;let x=0,y=0;for(const q of poses){x+=(q.left+q.w*q.tyres[side<0?0:1])*q.weight;y+=(q.bottom-(side>0?Math.abs(steer)*8:0))*q.weight;}return [x*mirror,y];}

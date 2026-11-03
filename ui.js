@@ -14,7 +14,7 @@ function initUnifiedUI(){
  $('#menuBtn').onclick=()=>openMap($('#menuBtn'));$('#exploreProjects').onclick=()=>openMap($('#exploreProjects'));
  $('#map').addEventListener('keydown',trapCaseFocus);$('#map').addEventListener('close',()=>{route.accum=0;route.accumDir=0;route.lastInput=performance.now();if(mapReturnFocus?.isConnected)mapReturnFocus.focus({preventScroll:true});});
 }
-function openMap(trigger){entranceTravel=null;mapReturnFocus=trigger;signalState.velocity=0;updateUnifiedUI();$('#map').showModal();}
+function openMap(trigger){mapReturnFocus=trigger;signalState.velocity=0;updateUnifiedUI();$('#map').showModal();}
 function updateUnifiedUI(){const entrance=route.current===0&&route.state!=='transitioning';document.body.classList.toggle('at-entrance',entrance);
  if(routeNav){routeNav.hidden=entrance;
   const current=Math.max(0,route.current);

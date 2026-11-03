@@ -76,3 +76,8 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .at-entrance #routeNav,.at-entrance #routeSkip{display:none}
 @media(max-width:700px){#routeNav{bottom:calc(16px + env(safe-area-inset-bottom))}#routeNav button{padding:11px 13px;font-size:9px;letter-spacing:.5px}#routeName{max-width:58vw}#routeSkip{bottom:calc(74px + env(safe-area-inset-bottom));font-size:9px}}
 @media(prefers-reduced-motion:reduce){#routeNav,#routeSkip{backdrop-filter:none}}
+/* Panels hand over instead of popping; visibility is delayed so the fade-out shows. */
+#chapter{transition:opacity .35s ease,visibility .35s}
+#torch{transition:opacity .3s ease,background-color .15s,border-color .15s,color .15s}
+#finalContacts:not([hidden]){animation:panel-in .45s ease-out}
+@media(prefers-reduced-motion:reduce){#chapter,#torch{transition:none}#finalContacts:not([hidden]){animation:none}}
